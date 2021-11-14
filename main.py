@@ -1,5 +1,5 @@
 from lexer import lex
 
 print(lex("""
-1b123
+for (i : range(10)) print(i)
 """))

@@ -126,7 +126,29 @@ def num_token(chars):
 
 @matcher
 def symbol_token(chars):
-    pass
+    for symbol in SYMBOLS:
+        if len(chars) >= len(symbol) and "".join(chars[:len(symbol)]) == symbol:
+            chars[:] = chars[len(symbol):]
+            return ("symbol", symbol)
+
+@matcher
+def identifier_token(chars):
+    if chars[0] == "`":
+        chars.pop(0)
+        seq = ""
+        while True:
+            if not chars:
+                raise RuntimeError("unclosed identifier string at EOF")
+            elif chars[0] == "`":
+                chars.pop(0)
+                return ("identifier", seq)
+            else:
+                seq += chars.pop(0)
+    elif IS_IDENT_CHAR(chars[0]):
+        seq = chars.pop(0)
+        while chars and (IS_IDENT_CHAR(chars[0]) or chars[0] in DIGITS):
+            seq += chars.pop(0)
+        return ("identifier", seq)
 
 def lex(code):
     code = list(code)
