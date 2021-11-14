@@ -88,6 +88,46 @@ def string_token(chars):
                 string.append(chars.pop(0))
         return ("string", string)
 
+@matcher
+def num_token(chars):
+    if chars[0] in DIGITS or (chars[0] == "." and chars[0] in DIGITS):
+        digits = DIGITS
+        seq = chars.pop(0)
+        base = 0
+        decimal = seq == "."
+        if decimal:
+            base = 10
+        exp = 0
+        while chars:
+            if chars[0] in digits:
+                seq += chars.pop(0)
+            elif chars[0] == "." and not decimal:
+                seq += chars.pop(0)
+                decimal = True
+            elif chars[0] in "BOXbox" and base == 0:
+                seq += chars.pop(0).lower()
+                base = {"b": 2, "o": 8, "x": 16}[seq[-1]]
+                digits = {
+                    "b": "01",
+                    "o": "01234567",
+                    "x": HEX_DIGITS
+                }[seq[-1]]
+            elif chars[0] in "eE" and exp == 0:
+                exp = 3
+                seq += chars.pop(0).lower()
+                decimal = True
+                base = base or 10
+            elif chars[0] == "-" and exp == 2:
+                seq += chars.pop(0)
+            else:
+                break
+            if exp > 1: exp -= 1
+        return ("number", seq)
+
+@matcher
+def symbol_token(chars):
+    pass
+
 def lex(code):
     code = list(code)
     tokens = []
@@ -101,5 +141,5 @@ def lex(code):
                 tokens.append(match)
                 break
         else:
-            raise RuntimeError("was not able to identify token for " + repr(code[:50]))
+            raise RuntimeError("was not able to identify token for " + repr("".join(code[:50])))
     return tokens
